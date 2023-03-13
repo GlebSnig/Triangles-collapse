@@ -28,6 +28,17 @@ class Triangle:
         self.color = color
         self.rotation = 0
         self.speed = 2
+        self.direction = (1, 1)
+
+    def update_position(self):
+        self.x += self.speed * self.direction[0]
+        self.y += self.speed * self.direction[1]
+
+        # Проверка столкновения с границами экрана
+        if self.x < 0 or self.x > screen_width - self.size:
+            self.direction = (-self.direction[0], self.direction[1])
+        if self.y < 0 or self.y > screen_height - self.size:
+            self.direction = (self.direction[0], -self.direction[1])
 
     def get_points(self):
         x, y = self.x, self.y
@@ -71,8 +82,26 @@ class Triangle:
             else:
                 return False
 
+    def check_collision(self, other):
+        # Проверка пересечения каждой стороны одного треугольника со сторонами другого треугольника
+        for i in range(3):
+            p1 = self.get_points()[i]
+            p2 = self.get_points()[(i + 1) % 3]
+            for j in range(3):
+                p3 = other.get_points()[j]
+                p4 = other.get_points()[(j + 1) % 3]
+                if self.do_lines_intersect(p1, p2, p3, p4):
+                    triangle1.direction = (-triangle1.direction[0], -triangle1.direction[1])
+                    triangle2.direction = (-triangle2.direction[0], -triangle2.direction[1])
+                    return True
+        return False
+
+
+
 triangle1 = Triangle(200, 200, 50, blue)
 triangle2 = Triangle(400, 400, 50, green)
+triangle1.direction = (1, 1)
+triangle2.direction = (-1, -1)
 running = True
 clock = pygame.time.Clock()
 while running:
@@ -83,6 +112,14 @@ while running:
     # Обновление состояния треугольников
     triangle1.rotation += 1
     triangle2.rotation += 1
+    triangle1.update_position()
+    triangle2.update_position()
+    if triangle1.check_collision(triangle2):
+        triangle1.color = red
+        triangle2.color = red
+    else:
+        triangle1.color = blue
+        triangle2.color = green
 
     # Отрисовка треугольников
     screen.fill(white)
