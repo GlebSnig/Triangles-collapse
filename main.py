@@ -1,24 +1,6 @@
 import pygame
 import math
 
-# Инициализация Pygame
-pygame.init()
-
-# Определение размеров окна
-screen_width = 800
-screen_height = 600
-
-# Создание окна
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Collision Detection Example")
-
-# Цвета
-black = (0, 0, 0)
-white = (255, 255, 255)
-red = (255, 0, 0)
-green = (0, 255, 0)
-blue = (0, 0, 255)
-
 # Класс для треугольника
 class Triangle:
     def __init__(self, x, y, size, color):
@@ -30,14 +12,14 @@ class Triangle:
         self.speed = 2
         self.direction = (1, 1)
 
-    def update_position(self):
+    def update_position(self, screen_width, screen_height):
         self.x += self.speed * self.direction[0]
         self.y += self.speed * self.direction[1]
 
         # Проверка столкновения с границами экрана
-        if self.x < 0 or self.x > screen_width - self.size:
+        if self.x - self.size/2 < 0 or self.x > screen_width - self.size:
             self.direction = (-self.direction[0], self.direction[1])
-        if self.y < 0 or self.y > screen_height - self.size:
+        if self.y - self.size < 0 or self.y > screen_height - self.size:
             self.direction = (self.direction[0], -self.direction[1])
 
     def get_points(self):
@@ -82,7 +64,7 @@ class Triangle:
             else:
                 return False
 
-    def check_collision(self, other):
+    def check_collision(self, other, triangle1):
         # Проверка пересечения каждой стороны одного треугольника со сторонами другого треугольника
         for i in range(3):
             p1 = self.get_points()[i]
@@ -92,40 +74,58 @@ class Triangle:
                 p4 = other.get_points()[(j + 1) % 3]
                 if self.do_lines_intersect(p1, p2, p3, p4):
                     triangle1.direction = (-triangle1.direction[0], -triangle1.direction[1])
-                    triangle2.direction = (-triangle2.direction[0], -triangle2.direction[1])
+                    other.direction = (-other.direction[0], -other.direction[1])
                     return True
         return False
 
+def collapse(ang, tSize):
+    # Инициализация Pygame
+    pygame.init()
 
+    # Определение размеров окна
+    screen_width = 800
+    screen_height = 600
 
-triangle1 = Triangle(200, 200, 50, blue)
-triangle2 = Triangle(400, 400, 50, green)
-triangle1.direction = (1, 1)
-triangle2.direction = (-1, -1)
-running = True
-clock = pygame.time.Clock()
-while running:
-    # Обработка событий
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    # Обновление состояния треугольников
-    triangle1.rotation += 1
-    triangle2.rotation += 1
-    triangle1.update_position()
-    triangle2.update_position()
-    if triangle1.check_collision(triangle2):
-        triangle1.color = red
-        triangle2.color = red
-    else:
-        triangle1.color = blue
-        triangle2.color = green
+    # Создание окна
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    pygame.display.set_caption("Соударения треугольников")
 
-    # Отрисовка треугольников
-    screen.fill(white)
-    triangle1.draw(screen)
-    triangle2.draw(screen)
-    pygame.display.flip()
+    # Цвета
+    black = (0, 0, 0)
+    white = (255, 255, 255)
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
 
-    # Ограничение частоты кадров
-    clock.tick(60)
+    triangle1 = Triangle(200, 200, tSize, blue)
+    triangle2 = Triangle(400, 400, tSize, green)
+    triangle1.direction = (1, 1)
+    triangle2.direction = (-1, -1)
+    running = True
+    clock = pygame.time.Clock()
+    while running:
+        # Обработка событий
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                quit()
+        # Обновление состояния треугольников
+        triangle1.rotation += ang
+        triangle2.rotation += ang
+        triangle1.update_position(screen_width, screen_height)
+        triangle2.update_position(screen_width, screen_height)
+        if triangle1.check_collision(triangle2, triangle1):
+            triangle1.color = red
+            triangle2.color = red
+        else:
+            triangle1.color = blue
+            triangle2.color = green
+
+        # Отрисовка треугольников
+        screen.fill(white)
+        triangle1.draw(screen)
+        triangle2.draw(screen)
+        pygame.display.flip()
+
+        # Ограничение частоты кадров
+        clock.tick(60)
